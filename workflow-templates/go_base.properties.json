@@ -1,0 +1,11 @@
+{
+    "name": "Kolla Organization Workflow",
+    "description": "Kolla Organization Go checks workflow template.",
+    "iconName": "example-icon",
+    "categories": [
+        "Go"
+    ],
+    "filePatterns": [
+        "go.mod$"
+    ]
+}
