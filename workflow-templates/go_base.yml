@@ -1,0 +1,60 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - uses: actions/cache@v2
+      name: Set up cache
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          %LocalAppData%\go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Granting private modules access
+      run: |
+        git config --global url."https://${{ secrets.ACCESS_TOKEN }}:x-oauth-basic@github.com/kollalabs".insteadOf "https://github.com/kollalabs"
+
+    - name: Install sqlc
+      run: go install github.com/kyleconroy/sqlc/cmd/sqlc@v1.10.0
+
+    - name: Run go generate and check for changes
+      run: |
+        go generate ./...
+        diff=$(git status --porcelain)
+        if [[ -z $diff ]];
+        then
+          echo "No changes"
+        else
+          echo "Changes detected"
+          echo $diff
+          exit 1;
+        fi
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
+      
+    - name: Vet
+      run: go vet ./...
