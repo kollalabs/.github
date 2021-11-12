@@ -2,9 +2,9 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: [ $default-branch ]
   pull_request:
-    branches: [ main ]
+    branches: [ $default-branch ]
 
 jobs:
 
@@ -30,25 +30,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: Granting private modules access
+    - name: Grant private modules access
       run: |
         git config --global url."https://${{ secrets.ACCESS_TOKEN }}:x-oauth-basic@github.com/kollalabs".insteadOf "https://github.com/kollalabs"
-
-    - name: Install sqlc
-      run: go install github.com/kyleconroy/sqlc/cmd/sqlc@v1.10.0
-
-    - name: Run go generate and check for changes
-      run: |
-        go generate ./...
-        diff=$(git status --porcelain)
-        if [[ -z $diff ]];
-        then
-          echo "No changes"
-        else
-          echo "Changes detected"
-          echo $diff
-          exit 1;
-        fi
 
     - name: Build
       run: go build -v ./...
